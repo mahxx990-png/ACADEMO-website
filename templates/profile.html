@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ACADEMO — Update your academic profile, specialization, and AI optimization preferences.">
+    <title>ACADEMO — My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#0f0345', light: '#1a0b6e', accent: '#0350c4' },
+                        surface: '#f4f8ff',
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { background: #f4f8ff; font-feature-settings: "cv02","cv03","cv04","cv11"; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(.16,1,.3,1) forwards; }
+        .animate-delay-1 { animation-delay: 0.08s; }
+        .animate-delay-2 { animation-delay: 0.16s; }
+        .animate-delay-3 { animation-delay: 0.24s; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        /* ─── Specializations ─── */
+        const SPECIALIZATIONS = [
+            "Computer Science",
+            "Computing with Business",
+            "IT",
+            "Network & Security",
+            "Web Development",
+        ];
+
+        /* ─── Optimization Question Config ─── */
+        const OPT_QUESTIONS = [
+            {
+                key: "priority",
+                label: "Academic Priority",
+                description: "What matters most to you right now?",
+                icon: "🎯",
+                options: [
+                    { value: "speed", label: "Graduate as fast as possible" },
+                    { value: "gpa", label: "Maximize my GPA" },
+                    { value: "balanced", label: "Balanced approach" },
+                ],
+            },
+            {
+                key: "course_load",
+                label: "Preferred Course Load",
+                description: "How many courses per semester feel right?",
+                icon: "📚",
+                options: [
+                    { value: "light", label: "Light (3-4 courses)" },
+                    { value: "balanced", label: "Balanced (5-6 courses)" },
+                    { value: "heavy", label: "Heavy (7+ courses)" },
+                ],
+            },
+            {
+                key: "employment",
+                label: "Employment Status",
+                description: "This helps us gauge your available study time.",
+                icon: "💼",
+                options: [
+                    { value: "none", label: "Not currently working" },
+                    { value: "part_time", label: "Part-time job" },
+                    { value: "full_time", label: "Full-time job" },
+                ],
+            },
+            {
+                key: "learning_pref",
+                label: "Learning Preference",
+                description: "How do you learn best?",
+                icon: "🧠",
+                options: [
+                    { value: "visual", label: "Visual & diagrams" },
+                    { value: "reading", label: "Reading & notes" },
+                    { value: "hands_on", label: "Hands-on practice" },
+                    { value: "mixed", label: "Mixed / varies" },
+                ],
+            },
+            {
+                key: "daily_study_hours",
+                label: "Daily Study Hours",
+                description: "How many hours can you dedicate outside class?",
+                icon: "⏰",
+                options: [
+                    { value: "1-2", label: "1–2 hours" },
+                    { value: "3-4", label: "3–4 hours" },
+                    { value: "5-6", label: "5–6 hours" },
+                    { value: "7+", label: "7+ hours" },
+                ],
+            },
+        ];
+
+        /* ─── Toast Component ─── */
+        function Toast({ message, type, onClose }) {
+            useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, []);
+            const bg = type === "success"
+                ? "bg-emerald-500"
+                : type === "error" ? "bg-red-500" : "bg-brand-accent";
+            return (
+                <div className={`fixed top-6 right-6 z-50 ${bg} text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in-up font-semibold text-sm`}>
+                    {type === "success" && <span>✓</span>}
+                    {type === "error" && <span>✕</span>}
+                    {message}
+                </div>
+            );
+        }
+
+        /* ─── Option Card ─── */
+        function OptionCard({ label, selected, onClick }) {
+            return (
+                <button
+                    type="button"
+                    onClick={onClick}
+                    className={`relative px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 border-2 text-left
+                        ${selected
+                            ? "border-brand bg-brand/5 text-brand shadow-md shadow-brand/10 scale-[1.02]"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-brand/30 hover:bg-brand/[0.02]"
+                        }`}
+                >
+                    {selected && (
+                        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-[10px] shadow-lg">✓</span>
+                    )}
+                    {label}
+                </button>
+            );
+        }
+
+        /* ─── Main Profile App ─── */
+        function ProfileApp() {
+            const [loading, setLoading] = useState(true);
+            const [saving, setSaving] = useState(false);
+            const [toast, setToast] = useState(null);
+
+            // Personal info
+            const [fullName, setFullName] = useState("");
+            const [email, setEmail] = useState("");
+            const [studentId, setStudentId] = useState("");
+            const [phone, setPhone] = useState("");
+            const [specialization, setSpecialization] = useState("");
+
+            // Optimization
+            const [optimization, setOptimization] = useState({});
+            const [strengths, setStrengths] = useState("");
+
+            const initialDataRef = useRef(null);
+
+            const resetToInitial = (data) => {
+                const d = data || initialDataRef.current || {};
+                setFullName(d.full_name || "");
+                setEmail(d.email || "");
+                setStudentId(d.student_id || "");
+                setPhone(d.phone || "");
+                setSpecialization(d.specialization || "");
+                const opt = d.optimization || {};
+                setOptimization(opt);
+                setStrengths(opt.strengths || "");
+            };
+
+            useEffect(() => {
+                fetch("/api/me/profile", { credentials: "same-origin" })
+                    .then(r => r.json())
+                    .then(data => {
+                        initialDataRef.current = data;
+                        resetToInitial(data);
+                    })
+                    .catch(() => setToast({ message: "Failed to load profile.", type: "error" }))
+                    .finally(() => setLoading(false));
+            }, []);
+
+            const handleDiscard = () => {
+                resetToInitial();
+                setToast({ message: "Changes discarded.", type: "success" });
+            };
+
+            const handleOptChange = (key, value) => {
+                setOptimization(prev => ({ ...prev, [key]: value }));
+            };
+
+            const handleSave = async () => {
+                setSaving(true);
+                try {
+                    const body = {
+                        full_name: fullName,
+                        email,
+                        phone,
+                        specialization,
+                        optimization: { ...optimization, strengths: strengths.trim() },
+                    };
+                    const r = await fetch("/api/me/profile", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "same-origin",
+                        body: JSON.stringify(body),
+                    });
+                    const result = await r.json();
+                    if (r.ok && result.ok) {
+                        setToast({ message: "Profile saved successfully!", type: "success" });
+                        initialDataRef.current = {
+                            full_name: fullName,
+                            email,
+                            student_id: studentId,
+                            phone,
+                            specialization,
+                            optimization: { ...optimization, strengths: strengths.trim() }
+                        };
+                        // Also update localStorage major so main page stays in sync
+                        if (specialization) {
+                            localStorage.setItem("academoSelectedMajor", specialization);
+                        }
+                    } else {
+                        const msg = (result.errors || []).join(" ") || "Could not save profile.";
+                        setToast({ message: msg, type: "error" });
+                    }
+                } catch {
+                    setToast({ message: "Network error.", type: "error" });
+                } finally {
+                    setSaving(false);
+                }
+            };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="w-12 h-12 border-4 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen pb-24">
+                    {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+
+                    {/* Header */}
+                    <header className="bg-gradient-to-br from-brand via-brand-light to-brand-accent text-white py-6 px-6 md:px-10 shadow-xl rounded-br-[80px] relative overflow-hidden">
+                        <div className="absolute top-[-50%] right-[-10%] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(255,255,255,0.06)_0%,transparent_70%)] rounded-full pointer-events-none"></div>
+                        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <a href="/home" className="shrink-0">
+                                    <img src="/static/images/logo_small.png" alt="ACADEMO" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-xl hover:scale-110 hover:-rotate-2 transition-transform duration-500" />
+                                </a>
+                                <div>
+                                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">My Profile</h1>
+                                    <p className="text-blue-200 text-xs md:text-sm mt-1 font-medium tracking-widest uppercase">ACADEMO Settings & Preferences</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <a href="/home" className="text-blue-200 hover:text-white text-sm font-semibold px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                    Tools
+                                </a>
+                                <a href="/logout" className="text-blue-200 hover:text-white text-sm font-semibold px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">Log out</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto mt-8 px-4 md:px-6 space-y-8">
+
+                        {/* ─── Section 1: Personal Info ─── */}
+                        <section className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 md:p-10 animate-fade-in-up opacity-0">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand/10 to-brand-accent/10 flex items-center justify-center text-2xl shadow-sm">👤</div>
+                                <div>
+                                    <h2 className="text-xl font-extrabold text-gray-800">Personal Information</h2>
+                                    <p className="text-gray-500 text-sm">Your identity within ACADEMO</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+                                    <input type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-brand/10 focus:border-brand/40 outline-none transition-all text-sm font-medium text-gray-800" placeholder="Your full name" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Student ID</label>
+                                    <input type="text" value={studentId} disabled
+                                        className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium text-gray-500 cursor-not-allowed" />
+                                    <p className="text-xs text-gray-400 mt-1">Student ID cannot be changed.</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
+                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-brand/10 focus:border-brand/40 outline-none transition-all text-sm font-medium text-gray-800" placeholder="you@example.com" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone</label>
+                                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-brand/10 focus:border-brand/40 outline-none transition-all text-sm font-medium text-gray-800" placeholder="+962 ..." />
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* ─── Section 2: Specialization ─── */}
+                        <section className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 md:p-10 animate-fade-in-up opacity-0 animate-delay-1">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-2xl shadow-sm">🎓</div>
+                                <div>
+                                    <h2 className="text-xl font-extrabold text-gray-800">Specialization</h2>
+                                    <p className="text-gray-500 text-sm">Your major is used across all ACADEMO tools</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {SPECIALIZATIONS.map(sp => (
+                                    <button
+                                        key={sp}
+                                        type="button"
+                                        onClick={() => setSpecialization(sp)}
+                                        className={`relative px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-200 border-2 text-left
+                                            ${specialization === sp
+                                                ? "border-brand bg-brand/5 text-brand shadow-lg shadow-brand/10 scale-[1.02]"
+                                                : "border-gray-200 bg-white text-gray-600 hover:border-brand/30 hover:bg-brand/[0.02]"
+                                            }`}
+                                    >
+                                        {specialization === sp && (
+                                            <span className="absolute -top-2 -right-2 w-6 h-6 bg-brand rounded-full flex items-center justify-center text-white text-xs shadow-lg">✓</span>
+                                        )}
+                                        {sp}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* ─── Section 3: Optimization Questions ─── */}
+                        <section className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 md:p-10 animate-fade-in-up opacity-0 animate-delay-2">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-2xl shadow-sm">⚡</div>
+                                <div>
+                                    <h2 className="text-xl font-extrabold text-gray-800">AI Optimization</h2>
+                                    <p className="text-gray-500 text-sm">Help our AI give you better, more personalized recommendations</p>
+                                </div>
+                            </div>
+                            <div className="mb-8">
+                                <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 rounded-xl border border-blue-100">
+                                    <span className="text-blue-500 text-sm">💡</span>
+                                    <p className="text-xs text-blue-700 font-medium">These answers are optional but greatly improve AI accuracy for Course Advisor, GPA Planner, and Graduation Plan.</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-10">
+                                {OPT_QUESTIONS.map(q => (
+                                    <div key={q.key}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xl">{q.icon}</span>
+                                            <h3 className="text-base font-bold text-gray-800">{q.label}</h3>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-3 ml-8">{q.description}</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 ml-8">
+                                            {q.options.map(opt => (
+                                                <OptionCard
+                                                    key={opt.value}
+                                                    label={opt.label}
+                                                    selected={optimization[q.key] === opt.value}
+                                                    onClick={() => handleOptChange(q.key, opt.value)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Strengths — free text */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xl">💪</span>
+                                        <h3 className="text-base font-bold text-gray-800">Your Strengths</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-3 ml-8">Describe your academic strengths, favorite subjects, or anything the AI should know about you.</p>
+                                    <div className="ml-8">
+                                        <textarea
+                                            value={strengths}
+                                            onChange={e => setStrengths(e.target.value)}
+                                            rows={3}
+                                            maxLength={500}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/10 focus:border-brand/40 outline-none transition-all text-sm font-medium text-gray-800 resize-none placeholder-gray-400"
+                                            placeholder="e.g., Strong in math and algorithms, enjoy databases, struggle with networking..."
+                                        ></textarea>
+                                        <p className="text-xs text-gray-400 mt-1 text-right">{strengths.length}/500</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* ─── Action Buttons ─── */}
+                        <div className="flex justify-end items-center gap-4 animate-fade-in-up opacity-0 animate-delay-3">
+                            <button
+                                onClick={handleDiscard}
+                                disabled={saving}
+                                className="px-6 py-4 bg-white border-2 border-gray-200 text-gray-500 font-bold text-sm rounded-full hover:bg-gray-50 hover:text-gray-800 transition-all active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                Discard Changes
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="group relative px-10 py-4 bg-gradient-to-r from-brand via-brand-light to-brand-accent text-white font-extrabold text-base rounded-full overflow-hidden shadow-xl shadow-brand/30 hover:shadow-brand/50 transition-all active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <span className="relative z-10 flex items-center gap-2">
+                                    {saving ? (
+                                        <>
+                                            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            Saving…
+                                        </>
+                                    ) : (
+                                        <>
+                                            Save Profile
+                                            <span className="group-hover:rotate-12 transition-transform">💾</span>
+                                        </>
+                                    )}
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-brand-accent to-brand opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </button>
+                        </div>
+
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="text-center py-8 text-gray-400 text-xs font-medium">
+                        ACADEMO &copy; 2026 — Academic Intelligence for Computer Science Students
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<ProfileApp />);
+    </script>
+</body>
+</html>

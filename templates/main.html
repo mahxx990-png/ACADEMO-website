@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="ACADEMO — AI-powered academic advisor for Computer Science students. Plan courses, track GPA, and build your graduation roadmap.">
+    <title>ACADEMO — Academic Intelligence Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f4f8ff;
+            min-height: 100vh;
+            color: #1a1a2e;
+        }
+
+        /* ====== HEADER ====== */
+        header {
+            background: linear-gradient(135deg, #0f0345 0%, #1a0b6e 50%, #0350c4 100%);
+            color: white;
+            padding: 28px 40px;
+            border-bottom-right-radius: 80px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(15, 3, 69, 0.3);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .header-auth {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .header-auth a {
+            color: rgba(200, 215, 255, 0.95);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .header-auth a:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .header-auth .user-label {
+            color: rgba(200, 215, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .guest-banner {
+            background: linear-gradient(90deg, rgba(255, 243, 224, 0.95), rgba(255, 251, 235, 0.98));
+            border-bottom: 1px solid rgba(251, 191, 36, 0.35);
+            color: #78350f;
+            padding: 12px 24px;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .guest-banner a {
+            color: #0350c4;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .guest-banner a:hover {
+            text-decoration: underline;
+        }
+
+        .header-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .header-logo:hover {
+            transform: scale(1.08) rotate(-2deg);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            position: relative;
+        }
+
+        header p {
+            color: rgba(200, 215, 255, 0.85);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* ====== HERO ====== */
+        .hero {
+            text-align: center;
+            padding: 50px 20px 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0f0345;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .hero p {
+            color: #6b7280;
+            font-size: 1.05rem;
+            max-width: 550px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .major-select-wrap {
+            max-width: 640px;
+            margin: 22px auto 0;
+            text-align: left;
+            background: #ffffff;
+            border: 1px solid rgba(3, 80, 196, 0.12);
+            border-radius: 18px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 20px rgba(3, 80, 196, 0.06);
+        }
+
+        .major-select-wrap label {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #1a0b6e;
+            margin-bottom: 8px;
+        }
+
+        .major-select-wrap select {
+            width: 100%;
+            border: 1px solid #d4ddf2;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.94rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            background: #f8fbff;
+            outline: none;
+        }
+
+        /* ====== CARDS CONTAINER ====== */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 30px 60px;
+        }
+
+        /* ====== CARD ====== */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 36px 30px 30px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0f0345, #0350c4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(3, 80, 196, 0.12);
+            border-color: rgba(3, 80, 196, 0.15);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* ====== AI BADGE ====== */
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #0f0345, #0350c4);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 5px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(3, 80, 196, 0.25);
+        }
+
+        /* ====== CARD ICON ====== */
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-icon img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .card-icon.blue {
+            background: linear-gradient(135deg, #e8f0ff, #d0e2ff);
+        }
+
+        .card-icon.purple {
+            background: linear-gradient(135deg, #f0e8ff, #e0d0ff);
+        }
+
+        .card-icon.teal {
+            background: linear-gradient(135deg, #e0f7f4, #c8eee8);
+        }
+
+        /* ====== CARD CONTENT ====== */
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f0345;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .card p {
+            color: #6b7280;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            flex-grow: 1;
+        }
+
+        /* ====== BUTTON ====== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #0f0345, #1a0b6e);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(15, 3, 69, 0.2);
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #1a0b6e, #0350c4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(3, 80, 196, 0.3);
+        }
+
+        .btn-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover .btn-arrow {
+            transform: translateX(4px);
+        }
+
+        /* ====== FOOTER ====== */
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #9ca3af;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        /* ====== ANIMATIONS ====== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(1) {
+            animation: fadeInUp 0.5s ease-out 0.1s both;
+        }
+
+        .card:nth-child(2) {
+            animation: fadeInUp 0.5s ease-out 0.25s both;
+        }
+
+        .card:nth-child(3) {
+            animation: fadeInUp 0.5s ease-out 0.4s both;
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 700px) {
+            header {
+                padding: 22px 24px;
+                border-bottom-right-radius: 50px;
+            }
+
+            header h1 {
+                font-size: 1.6rem;
+            }
+
+            .hero h2 {
+                font-size: 1.4rem;
+            }
+
+            .container {
+                padding: 16px 16px 40px;
+                gap: 20px;
+            }
+
+            .card {
+                padding: 28px 24px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-inner">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <img src="{{ url_for('static', filename='images/logo_small.png') }}" alt="ACADEMO Logo"
+                    class="header-logo">
+                <div>
+                    <h1>ACADEMO</h1>
+                    <p>Academic Intelligence Advisor</p>
+                </div>
+            </div>
+            <div class="header-auth">
+                {% if current_user.is_authenticated %}
+                <span class="user-label">{{ current_user.full_name or current_user.student_id or current_user.username
+                    }}</span>
+                <a href="{{ url_for('profile.profile_page') }}" style="display:inline-flex;align-items:center;gap:6px;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        style="opacity:.85">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Profile
+                </a>
+                <a href="{{ url_for('auth.logout') }}">Log out</a>
+                {% else %}
+                <a href="{{ url_for('auth.login', next=request.full_path) }}">Log in</a>
+                <a href="{{ url_for('auth.login', tab='register', next=request.full_path) }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    {% if not current_user.is_authenticated %}
+    <div class="guest-banner">
+        You are using ACADEMO as a <strong>guest</strong> — transcripts and profile are not saved.
+        <a href="{{ url_for('auth.login', tab='register', next=request.full_path) }}">Create a free account</a> to keep
+        your data across visits.
+    </div>
+    {% endif %}
+
+    <div class="hero">
+        <h2>Welcome — Choose Your Tool</h2>
+        <p>Your AI-powered academic companion for course planning, GPA tracking, and graduation roadmapping.</p>
+
+        {% if current_user.is_authenticated %}
+        <!-- Logged-in: show AI Optimization badge -->
+        <div class="major-select-wrap" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <label style="margin-bottom:4px">AI Optimization Guide</label>
+                <div style="font-size:0.95rem;font-weight:700;color:#0f0345">Answer questions to tune AI recommendations
+                </div>
+            </div>
+            <a href="{{ url_for('profile.profile_page') }}"
+                style="font-size:0.82rem;font-weight:700;color:#0350c4;text-decoration:none;padding:8px 18px;border:1px solid rgba(3,80,196,0.2);border-radius:12px;transition:background 0.2s;white-space:nowrap;"
+                onmouseover="this.style.background='rgba(3,80,196,0.06)'"
+                onmouseout="this.style.background='transparent'">Setup Profile →</a>
+        </div>
+        <!-- Hidden elements to preserve JS specialization fetch logic -->
+        <div id="profile-major-badge" style="display:none;"></div>
+        <div id="profile-major-text" style="display:none;"></div>
+        {% else %}
+        <!-- Guest: show dropdown -->
+        <div class="major-select-wrap">
+            <label for="global-major-select">Select Major</label>
+            <select id="global-major-select">
+                <option value="">-- Choose your major --</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Computing with Business">Computing with Business</option>
+                <option value="IT">IT</option>
+                <option value="Network &amp; Security">Network &amp; Security</option>
+                <option value="Web Development">Web Development</option>
+            </select>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="container">
+
+        <!-- Card 1: Course Advisor -->
+        <div class="card">
+            <div class="ai-badge">AI Powered ✨</div>
+            <div class="card-icon blue">
+                <img src="{{ url_for('static', filename='images/academic_icon.png') }}" alt="Course Advisor">
+            </div>
+            <h2>Course Advisor</h2>
+            <p>
+                Upload your transcript and get AI-powered recommendations for your next semester — optimized for your
+                progress, prerequisites, and goals.
+            </p>
+            <a href="{{ url_for('course_advisor.index') }}" class="btn" id="btn-course-advisor">
+                Plan My Courses <span class="btn-arrow">→</span>
+            </a>
+        </div>
+
+        <!-- Card 2: Graduation Plan -->
+        <div class="card">
+            <div class="ai-badge">AI Powered ✨</div>
+            <div class="card-icon teal">
+                <img src="{{ url_for('static', filename='images/task_list_icon.png') }}" alt="Graduation Plan">
+            </div>
+            <h2>Graduation Plan</h2>
+            <p>
+                Generate a complete semester-by-semester graduation roadmap from your current state until degree
+                completion — powered by ACADEMO intelligence.
+            </p>
+            <a href="{{ url_for('graduation_plan.graduation_plan') }}" class="btn" id="btn-graduation-plan">
+                Build My Roadmap <span class="btn-arrow">→</span>
+            </a>
+        </div>
+
+        <!-- Card 3: GPA Planner -->
+        <div class="card">
+            <div class="ai-badge">AI Powered ✨</div>
+            <div class="card-icon purple">
+                <img src="{{ url_for('static', filename='images/gpa_icon.png') }}" alt="GPA Planner">
+            </div>
+            <h2>GPA Planner</h2>
+            <p>
+                Enter your current GPA and planned courses to calculate your expected GPA, get achievement analysis, and
+                personalized study strategies.
+            </p>
+            <a href="{{ url_for('gpa_planner.gpa_planner') }}" class="btn" id="btn-gpa-planner">
+                Track My GPA <span class="btn-arrow">→</span>
+            </a>
+        </div>
+
+    </div>
+
+    <footer>
+        ACADEMO &copy; 2026 — Academic Intelligence for Computer Science Students
+    </footer>
+
+    <script>
+        (function () {
+            const storageKey = "academoSelectedMajor";
+            const majorSelect = document.getElementById("global-major-select");
+            const profileBadge = document.getElementById("profile-major-badge");
+            const profileText = document.getElementById("profile-major-text");
+            const cardLinks = [
+                document.getElementById("btn-course-advisor"),
+                document.getElementById("btn-gpa-planner"),
+                document.getElementById("btn-graduation-plan")
+            ].filter(Boolean);
+
+            const updateLinks = (major) => {
+                cardLinks.forEach((link) => {
+                    const baseUrl = link.getAttribute("href").split("?")[0];
+                    if (major) {
+                        link.setAttribute("href", `${baseUrl}?major=${encodeURIComponent(major)}`);
+                    } else {
+                        link.setAttribute("href", baseUrl);
+                    }
+                });
+            };
+
+            /* ── Logged-in user: fetch specialization from profile ── */
+            if (profileBadge) {
+                fetch('/api/session/context', { credentials: 'same-origin' })
+                    .then(r => r.json())
+                    .then(data => {
+                        const spec = (data.specialization || '').trim();
+                        if (spec) {
+                            profileText.textContent = spec;
+                            localStorage.setItem(storageKey, spec);
+                            updateLinks(spec);
+                        } else {
+                            profileText.textContent = 'Not set — click to choose';
+                            updateLinks(localStorage.getItem(storageKey) || '');
+                        }
+                    })
+                    .catch(() => {
+                        profileText.textContent = 'Could not load';
+                        updateLinks(localStorage.getItem(storageKey) || '');
+                    });
+                return;
+            }
+
+            /* ── Guest: use dropdown ── */
+            if (majorSelect) {
+                const persistedMajor = localStorage.getItem(storageKey) || "";
+                if (persistedMajor) {
+                    majorSelect.value = persistedMajor;
+                }
+                updateLinks(majorSelect.value);
+
+                majorSelect.addEventListener("change", function () {
+                    const selected = majorSelect.value;
+                    if (selected) {
+                        localStorage.setItem(storageKey, selected);
+                    } else {
+                        localStorage.removeItem(storageKey);
+                    }
+                    updateLinks(selected);
+                });
+            }
+        })();
+    </script>
+
+</body>
+
+</html>
